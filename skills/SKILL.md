@@ -1,17 +1,17 @@
 ---
 name: wallbit-skills
-description: Integración con la API pública de Wallbit para consultar balances, transacciones, ejecutar trades, obtener datos de assets y wallets. Usar cuando se trabaje con Wallbit API, endpoints de trading, balances de cuenta, portfolio de stocks, operaciones de inversión, o cuando el usuario mencione Wallbit.
+description: Integration with the Wallbit public API to query balances, transactions, execute trades, get asset and wallet data. Use when working with Wallbit API, trading endpoints, account balances, stock portfolio, investment operations, or when the user mentions Wallbit.
 ---
 
 # Wallbit Public API
 
-API REST para integrar funcionalidad de Wallbit: consultar balances, ver historial de transacciones, ejecutar trades y más.
+REST API to integrate Wallbit functionality: query balances, view transaction history, execute trades and more.
 
 ## Quick Start
 
 **Base URL**: `https://api.wallbit.io`
 
-**Autenticación**: Header `X-API-Key` requerido en todas las requests.
+**Authentication**: `X-API-Key` header required on all requests.
 
 ```bash
 curl -H "X-API-Key: YOUR_API_KEY" https://api.wallbit.io/api/public/v1/balance/checking
@@ -19,17 +19,17 @@ curl -H "X-API-Key: YOUR_API_KEY" https://api.wallbit.io/api/public/v1/balance/c
 
 ## Endpoints Overview
 
-| Categoría    | Endpoint                             | Método | Descripción                   |
+| Category     | Endpoint                             | Method | Description                   |
 | ------------ | ------------------------------------ | ------ | ----------------------------- |
-| Balance      | `/api/public/v1/balance/checking`    | GET    | Balance cuenta checking       |
-| Balance      | `/api/public/v1/balance/stocks`      | GET    | Portfolio de inversión        |
-| Transactions | `/api/public/v1/transactions`        | GET    | Historial de transacciones    |
-| Trades       | `/api/public/v1/trades`              | POST   | Ejecutar compra/venta         |
-| Account      | `/api/public/v1/account-details`     | GET    | Detalles cuenta bancaria      |
-| Wallets      | `/api/public/v1/wallets`             | GET    | Direcciones de wallets crypto |
-| Assets       | `/api/public/v1/assets`              | GET    | Listar assets disponibles     |
-| Assets       | `/api/public/v1/assets/{symbol}`     | GET    | Info de asset específico      |
-| Operations   | `/api/public/v1/operations/internal` | POST   | Depósito/retiro inversión     |
+| Balance      | `/api/public/v1/balance/checking`    | GET    | Checking account balance      |
+| Balance      | `/api/public/v1/balance/stocks`      | GET    | Investment portfolio          |
+| Transactions | `/api/public/v1/transactions`        | GET    | Transaction history           |
+| Trades       | `/api/public/v1/trades`              | POST   | Execute buy/sell              |
+| Account      | `/api/public/v1/account-details`     | GET    | Bank account details          |
+| Wallets      | `/api/public/v1/wallets`             | GET    | Crypto wallet addresses       |
+| Assets       | `/api/public/v1/assets`              | GET    | List available assets         |
+| Assets       | `/api/public/v1/assets/{symbol}`     | GET    | Specific asset info           |
+| Operations   | `/api/public/v1/operations/internal` | POST   | Investment deposit/withdrawal |
 
 ## Authentication
 
@@ -39,7 +39,7 @@ curl -H "X-API-Key: YOUR_API_KEY" https://api.wallbit.io/api/public/v1/balance/c
 use Illuminate\Support\Facades\Http;
 
 /**
- * Crea un cliente HTTP configurado para la API de Wallbit.
+ * Creates an HTTP client configured for the Wallbit API.
  *
  * @return \Illuminate\Http\Client\PendingRequest
  */
@@ -96,19 +96,19 @@ class WallbitClient:
 
 ## Error Handling
 
-| Código | Descripción                       | Acción                         |
-| ------ | --------------------------------- | ------------------------------ |
-| 401    | API Key inválida o faltante       | Verificar header X-API-Key     |
-| 403    | Permisos insuficientes            | Verificar permisos del API Key |
-| 412    | KYC incompleto o cuenta bloqueada | Completar verificación en app  |
-| 422    | Error de validación               | Revisar parámetros enviados    |
-| 429    | Rate limit excedido               | Esperar `retry_after` segundos |
+| Code | Description                          | Action                              |
+| ---- | ------------------------------------ | ----------------------------------- |
+| 401  | Invalid or missing API Key           | Check X-API-Key header              |
+| 403  | Insufficient permissions             | Check API Key permissions           |
+| 412  | Incomplete KYC or blocked account    | Complete verification in the app    |
+| 422  | Validation error                     | Review sent parameters              |
+| 429  | Rate limit exceeded                  | Wait `retry_after` seconds          |
 
-### Ejemplo manejo de errores (PHP/Laravel)
+### Error handling example (PHP/Laravel)
 
 ```php
 /**
- * Ejecuta una request a la API de Wallbit con manejo de errores.
+ * Executes a Wallbit API request with error handling.
  *
  * @param string $method
  * @param string $endpoint
@@ -123,30 +123,30 @@ function wallbitRequest(string $method, string $endpoint, array $data = []): arr
     $response = match($method) {
         'GET' => $client->get($endpoint, $data),
         'POST' => $client->post($endpoint, $data),
-        default => throw new \Exception("Método no soportado: {$method}")
+        default => throw new \Exception("Unsupported method: {$method}")
     };
 
     if ($response->status() === 429) {
         $retryAfter = $response->json('retry_after', 60);
-        throw new \Exception("Rate limit excedido. Reintentar en {$retryAfter} segundos.");
+        throw new \Exception("Rate limit exceeded. Retry in {$retryAfter} seconds.");
     }
 
     if ($response->status() === 401) {
-        throw new \Exception("API Key inválida o faltante.");
+        throw new \Exception("Invalid or missing API Key.");
     }
 
     if ($response->status() === 403) {
         $permissions = $response->json('your_permissions', []);
-        throw new \Exception("Permisos insuficientes. Tienes: " . implode(', ', $permissions));
+        throw new \Exception("Insufficient permissions. You have: " . implode(', ', $permissions));
     }
 
     if ($response->status() === 422) {
         $errors = $response->json('errors', []);
-        throw new \Exception("Error de validación: " . json_encode($errors));
+        throw new \Exception("Validation error: " . json_encode($errors));
     }
 
     if (!$response->successful()) {
-        throw new \Exception($response->json('message', 'Error desconocido'));
+        throw new \Exception($response->json('message', 'Unknown error'));
     }
 
     return $response->json('data');
@@ -155,40 +155,40 @@ function wallbitRequest(string $method, string $endpoint, array $data = []): arr
 
 ## Rate Limiting
 
-Headers de respuesta:
+Response headers:
 
-- `X-RateLimit-Limit`: Requests permitidas por minuto
-- `X-RateLimit-Remaining`: Requests restantes
-- `X-RateLimit-Reset`: Timestamp Unix de reset
-- `Retry-After`: Segundos hasta poder reintentar (solo en 429)
+- `X-RateLimit-Limit`: Requests allowed per minute
+- `X-RateLimit-Remaining`: Remaining requests
+- `X-RateLimit-Reset`: Unix timestamp of reset
+- `Retry-After`: Seconds until retry is allowed (only on 429)
 
 ## Code Generation Guidelines
 
-Al generar código para esta API:
+When generating code for this API:
 
-1. **PHP/Laravel**: Usar camelCase para funciones, incluir docstrings PHPDoc
-2. **Validar parámetros** antes de enviar según los tipos del OpenAPI spec
-3. **Siempre manejar errores** 401, 403, 422, 429
-4. **No hardcodear API Keys**, usar variables de entorno
+1. **PHP/Laravel**: Use camelCase for functions, include PHPDoc docstrings
+2. **Validate parameters** before sending according to OpenAPI spec types
+3. **Always handle errors** 401, 403, 422, 429
+4. **Do not hardcode API Keys**, use environment variables
 
-### Monedas soportadas
+### Supported currencies
 
-- Transacciones: `USD`, `EUR`, `ARS`, `MXN`, `USDC`, `USDT`, `BOB`, `COP`, `PEN`, `DOP`
-- Account Details: `USD`, `EUR` (países: `US`, `EU`)
-- Wallets: `USDT`, `USDC` (redes: `ethereum`, `arbitrum`, `solana`, `polygon`, `tron`)
+- Transactions: `USD`, `EUR`, `ARS`, `MXN`, `USDC`, `USDT`, `BOB`, `COP`, `PEN`, `DOP`
+- Account Details: `USD`, `EUR` (countries: `US`, `EU`)
+- Wallets: `USDT`, `USDC` (networks: `ethereum`, `arbitrum`, `solana`, `polygon`, `tron`)
 
-### Categorías de Assets
+### Asset Categories
 
 `MOST_POPULAR`, `ETF`, `DIVIDENDS`, `TECHNOLOGY`, `HEALTH`, `CONSUMER_GOODS`, `ENERGY_AND_WATER`, `FINANCE`, `REAL_ESTATE`, `TREASURY_BILLS`, `VIDEOGAMES`, `ARGENTINA_ADR`
 
 ### Trade Order Types
 
-- `MARKET`: Orden a precio de mercado (ejecuta inmediatamente)
-- `LIMIT`: Orden limitada (requiere `limit_price` y `time_in_force`)
-- `STOP`: Orden stop (requiere `stop_price`)
-- `STOP_LIMIT`: Orden stop-limit (requiere `stop_price` y `limit_price`)
+- `MARKET`: Market order (executes immediately)
+- `LIMIT`: Limit order (requires `limit_price` and `time_in_force`)
+- `STOP`: Stop order (requires `stop_price`)
+- `STOP_LIMIT`: Stop-limit order (requires `stop_price` and `limit_price`)
 
 ## Additional Resources
 
-- Para documentación detallada de endpoints, ver [api-reference.md](api-reference.md)
-- Para ejemplos completos de código, ver [examples.md](examples.md)
+- For detailed endpoint documentation, see [api-reference.md](api-reference.md)
+- For complete code examples, see [examples.md](examples.md)

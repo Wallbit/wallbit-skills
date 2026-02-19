@@ -1,6 +1,6 @@
 # Wallbit API Reference
 
-Documentación detallada de todos los endpoints de la API pública de Wallbit.
+Detailed documentation for all Wallbit public API endpoints.
 
 ---
 
@@ -8,9 +8,9 @@ Documentación detallada de todos los endpoints de la API pública de Wallbit.
 
 ### GET /api/public/v1/balance/checking
 
-Obtiene los balances disponibles en la cuenta checking del usuario.
+Gets the available balances in the user's checking account.
 
-**Parámetros**: Ninguno
+**Parameters**: None
 
 **Response 200**:
 ```json
@@ -24,15 +24,15 @@ Obtiene los balances disponibles en la cuenta checking del usuario.
 }
 ```
 
-**Notas**: Solo retorna monedas con balance positivo.
+**Notes**: Only returns currencies with a positive balance.
 
 ---
 
 ### GET /api/public/v1/balance/stocks
 
-Obtiene el portfolio de inversión (stocks) del usuario.
+Gets the user's investment portfolio (stocks).
 
-**Parámetros**: Ninguno
+**Parameters**: None
 
 **Response 200**:
 ```json
@@ -54,7 +54,7 @@ Obtiene el portfolio de inversión (stocks) del usuario.
 }
 ```
 
-**Notas**: `USD` en la respuesta representa el balance en USD disponible en la cuenta de inversión.
+**Notes**: `USD` in the response represents the USD balance available in the investment account.
 
 ---
 
@@ -62,21 +62,21 @@ Obtiene el portfolio de inversión (stocks) del usuario.
 
 ### GET /api/public/v1/transactions
 
-Lista el historial de transacciones con paginación y filtros.
+Lists the transaction history with pagination and filters.
 
-**Parámetros Query**:
+**Query Parameters**:
 
-| Parámetro | Tipo | Requerido | Descripción |
-|-----------|------|-----------|-------------|
-| page | integer | No | Número de página (default: 1) |
-| limit | integer | No | Resultados por página: 10, 20, 50 (default: 10) |
-| status | string | No | Filtrar por estado (ej: COMPLETED) |
-| type | string | No | Filtrar por tipo (ej: TRADE) |
-| currency | string | No | Moneda: USD, EUR, ARS, MXN, USDC, USDT, BOB, COP, PEN, DOP |
-| from_date | date | No | Fecha inicial (formato: Y-m-d) |
-| to_date | date | No | Fecha final (formato: Y-m-d) |
-| from_amount | number | No | Monto mínimo |
-| to_amount | number | No | Monto máximo |
+| Parameter   | Type    | Required | Description |
+|-------------|---------|----------|-------------|
+| page        | integer | No       | Page number (default: 1) |
+| limit       | integer | No       | Results per page: 10, 20, 50 (default: 10) |
+| status      | string  | No       | Filter by status (e.g. COMPLETED) |
+| type        | string  | No       | Filter by type (e.g. TRADE) |
+| currency    | string  | No       | Currency: USD, EUR, ARS, MXN, USDC, USDT, BOB, COP, PEN, DOP |
+| from_date   | date    | No       | Start date (format: Y-m-d) |
+| to_date     | date    | No       | End date (format: Y-m-d) |
+| from_amount | number  | No       | Minimum amount |
+| to_amount   | number  | No       | Maximum amount |
 
 **Response 200**:
 ```json
@@ -114,23 +114,23 @@ Lista el historial de transacciones con paginación y filtros.
 
 ### POST /api/public/v1/trades
 
-Ejecuta una operación de compra (BUY) o venta (SELL) de activos.
+Executes a buy (BUY) or sell (SELL) operation on assets.
 
 **Request Body**:
 
-| Campo | Tipo | Requerido | Descripción |
-|-------|------|-----------|-------------|
-| symbol | string | Sí | Símbolo del asset (ej: AAPL, TSLA) |
-| direction | string | Sí | BUY o SELL |
-| currency | string | Sí | Moneda (solo USD soportado) |
-| order_type | string | Sí | MARKET, LIMIT, STOP, STOP_LIMIT |
-| amount | number | Condicional | Monto en USD (requerido si no se especifica shares) |
-| shares | number | Condicional | Cantidad de acciones (requerido si no se especifica amount) |
-| limit_price | number | Condicional | Precio límite (requerido para LIMIT y STOP_LIMIT) |
-| stop_price | number | Condicional | Precio stop (requerido para STOP y STOP_LIMIT) |
-| time_in_force | string | Condicional | DAY o GTC (requerido para LIMIT) |
+| Field         | Type   | Required    | Description |
+|---------------|--------|-------------|-------------|
+| symbol        | string | Yes         | Asset symbol (e.g. AAPL, TSLA) |
+| direction     | string | Yes         | BUY or SELL |
+| currency      | string | Yes         | Currency (USD only supported) |
+| order_type    | string | Yes         | MARKET, LIMIT, STOP, STOP_LIMIT |
+| amount        | number | Conditional | Amount in USD (required if shares not specified) |
+| shares        | number | Conditional | Number of shares (required if amount not specified) |
+| limit_price   | number | Conditional | Limit price (required for LIMIT and STOP_LIMIT) |
+| stop_price    | number | Conditional | Stop price (required for STOP and STOP_LIMIT) |
+| time_in_force | string | Conditional | DAY or GTC (required for LIMIT) |
 
-**Ejemplo Market Buy por monto**:
+**Market Buy by amount example**:
 ```json
 {
   "symbol": "AAPL",
@@ -141,7 +141,7 @@ Ejecuta una operación de compra (BUY) o venta (SELL) de activos.
 }
 ```
 
-**Ejemplo Limit Sell por shares**:
+**Limit Sell by shares example**:
 ```json
 {
   "symbol": "TSLA",
@@ -170,9 +170,9 @@ Ejecuta una operación de compra (BUY) o venta (SELL) de activos.
 }
 ```
 
-**Errores específicos**:
-- 400: Fondos insuficientes
-- 412: KYC de inversión incompleto
+**Specific errors**:
+- 400: Insufficient funds
+- 412: Incomplete investment KYC
 
 ---
 
@@ -180,14 +180,14 @@ Ejecuta una operación de compra (BUY) o venta (SELL) de activos.
 
 ### GET /api/public/v1/account-details
 
-Obtiene los detalles de la cuenta bancaria del usuario.
+Gets the user's bank account details.
 
-**Parámetros Query**:
+**Query Parameters**:
 
-| Parámetro | Tipo | Default | Descripción |
-|-----------|------|---------|-------------|
-| country | string | US | País: US, EU |
-| currency | string | USD | Moneda: USD, EUR |
+| Parameter | Type   | Default | Description |
+|-----------|--------|---------|-------------|
+| country   | string | US      | Country: US, EU |
+| currency  | string | USD     | Currency: USD, EUR |
 
 **Response 200 (US Account - ACH)**:
 ```json
@@ -231,8 +231,8 @@ Obtiene los detalles de la cuenta bancaria del usuario.
 }
 ```
 
-**Errores específicos**:
-- 422: Cuenta no verificada o país no soportado
+**Specific errors**:
+- 422: Unverified account or unsupported country
 
 ---
 
@@ -240,14 +240,14 @@ Obtiene los detalles de la cuenta bancaria del usuario.
 
 ### GET /api/public/v1/wallets
 
-Obtiene las direcciones de wallets crypto para recibir depósitos.
+Gets the crypto wallet addresses for receiving deposits.
 
-**Parámetros Query**:
+**Query Parameters**:
 
-| Parámetro | Tipo | Descripción |
-|-----------|------|-------------|
-| currency | string | Filtrar por moneda: USDT, USDC |
-| network | string | Filtrar por red: ethereum, arbitrum, solana, polygon, tron |
+| Parameter | Type   | Description |
+|-----------|--------|-------------|
+| currency  | string | Filter by currency: USDT, USDC |
+| network   | string | Filter by network: ethereum, arbitrum, solana, polygon, tron |
 
 **Response 200**:
 ```json
@@ -273,18 +273,18 @@ Obtiene las direcciones de wallets crypto para recibir depósitos.
 
 ### GET /api/public/v1/assets
 
-Lista los assets disponibles para trading con paginación y filtros.
+Lists the assets available for trading with pagination and filters.
 
-**Parámetros Query**:
+**Query Parameters**:
 
-| Parámetro | Tipo | Default | Descripción |
-|-----------|------|---------|-------------|
-| category | string | - | Categoría de assets (ver lista abajo) |
-| search | string | - | Búsqueda por símbolo, nombre o keywords (max 100 chars) |
-| page | integer | 1 | Número de página |
-| limit | integer | 10 | Assets por página (max: 50) |
+| Parameter | Type    | Default | Description |
+|-----------|---------|---------|-------------|
+| category  | string  | -       | Asset category (see list below) |
+| search    | string  | -       | Search by symbol, name or keywords (max 100 chars) |
+| page      | integer | 1       | Page number |
+| limit     | integer | 10      | Assets per page (max: 50) |
 
-**Categorías disponibles**:
+**Available categories**:
 - MOST_POPULAR
 - ETF
 - DIVIDENDS
@@ -324,13 +324,13 @@ Lista los assets disponibles para trading con paginación y filtros.
 
 ### GET /api/public/v1/assets/{symbol}
 
-Obtiene información detallada de un asset específico.
+Gets detailed information about a specific asset.
 
-**Parámetros Path**:
+**Path Parameters**:
 
-| Parámetro | Tipo | Requerido | Descripción |
-|-----------|------|-----------|-------------|
-| symbol | string | Sí | Símbolo del asset (ej: AAPL) |
+| Parameter | Type   | Required | Description |
+|-----------|--------|----------|-------------|
+| symbol    | string | Yes      | Asset symbol (e.g. AAPL) |
 
 **Response 200**:
 ```json
@@ -359,8 +359,8 @@ Obtiene información detallada de un asset específico.
 }
 ```
 
-**Errores específicos**:
-- 404: Asset no encontrado
+**Specific errors**:
+- 404: Asset not found
 
 ---
 
@@ -368,18 +368,18 @@ Obtiene información detallada de un asset específico.
 
 ### POST /api/public/v1/operations/internal
 
-Mueve fondos entre la cuenta checking (DEFAULT) y la cuenta de inversión (INVESTMENT).
+Moves funds between the checking account (DEFAULT) and the investment account (INVESTMENT).
 
 **Request Body**:
 
-| Campo | Tipo | Requerido | Descripción |
-|-------|------|-----------|-------------|
-| currency | string | Sí | Código de moneda (ej: USD) |
-| from | string | Sí | Cuenta origen: DEFAULT o INVESTMENT |
-| to | string | Sí | Cuenta destino: DEFAULT o INVESTMENT |
-| amount | number | Sí | Monto a transferir (min: 1, max: 999999) |
+| Field    | Type   | Required | Description |
+|----------|--------|----------|-------------|
+| currency | string | Yes      | Currency code (e.g. USD) |
+| from     | string | Yes      | Source account: DEFAULT or INVESTMENT |
+| to       | string | Yes      | Destination account: DEFAULT or INVESTMENT |
+| amount   | number | Yes      | Amount to transfer (min: 1, max: 999999) |
 
-**Ejemplo Depósito a inversión**:
+**Deposit to investment example**:
 ```json
 {
   "currency": "USD",
@@ -389,7 +389,7 @@ Mueve fondos entre la cuenta checking (DEFAULT) y la cuenta de inversión (INVES
 }
 ```
 
-**Ejemplo Retiro de inversión**:
+**Withdrawal from investment example**:
 ```json
 {
   "currency": "USD",
@@ -399,11 +399,11 @@ Mueve fondos entre la cuenta checking (DEFAULT) y la cuenta de inversión (INVES
 }
 ```
 
-**Response 200**: Retorna objeto Transaction.
+**Response 200**: Returns a Transaction object.
 
-**Errores específicos**:
-- 412: Cuenta bloqueada, KYC incompleto, o cuenta en migración
-- 422: Fondos insuficientes o error de validación
+**Specific errors**:
+- 412: Blocked account, incomplete KYC, or account in migration
+- 422: Insufficient funds or validation error
 
 ---
 
@@ -434,7 +434,7 @@ Mueve fondos entre la cuenta checking (DEFAULT) y la cuenta de inversión (INVES
 {
   "message": "The given data was invalid.",
   "errors": {
-    "symbol": ["El campo symbol es obligatorio."]
+    "symbol": ["The symbol field is required."]
   }
 }
 ```

@@ -1,60 +1,60 @@
 # Wallbit Skills
 
-Skill de Cursor para integración con la API pública de Wallbit.
+Cursor skill for integration with the Wallbit public API.
 
-## Descripción
+## Description
 
-Este skill proporciona a Cursor el conocimiento necesario para trabajar con la API de Wallbit, permitiendo generar código correcto y siguiendo las mejores prácticas para:
+This skill gives Cursor the knowledge needed to work with the Wallbit API, enabling it to generate correct code following best practices for:
 
-- Consultar balances (checking y stocks)
-- Ver historial de transacciones
-- Ejecutar trades de compra/venta
-- Obtener detalles de cuenta bancaria
-- Gestionar wallets crypto
-- Consultar información de assets
+- Querying balances (checking and stocks)
+- Viewing transaction history
+- Executing buy/sell trades
+- Getting bank account details
+- Managing crypto wallets
+- Querying asset information
 
-## Instalación
+## Installation
 
-Para usar este skill en Cursor, copia la carpeta `skills` a tu proyecto o configura la ruta en las preferencias de Cursor:
+To use this skill in Cursor, copy the `skills` folder to your project or configure the path in Cursor preferences:
 
 ```
 ~/.cursor/skills/wallbit-skill/SKILL.md
 ```
 
-## Uso
+## Usage
 
-Una vez instalado, Cursor detectará automáticamente cuándo trabajas con la API de Wallbit y utilizará este skill para:
+Once installed, Cursor will automatically detect when you are working with the Wallbit API and use this skill to:
 
-1. **Generar código con la estructura correcta** - Incluye docstrings, manejo de errores y nomenclatura camelCase
-2. **Usar los endpoints correctos** - Conoce todos los endpoints disponibles y sus parámetros
-3. **Implementar autenticación** - Configura correctamente el header `X-API-Key`
-4. **Manejar errores** - Implementa manejo de errores 401, 403, 422, 429
+1. **Generate code with the correct structure** - Includes docstrings, error handling and camelCase naming
+2. **Use the correct endpoints** - Knows all available endpoints and their parameters
+3. **Implement authentication** - Correctly configures the `X-API-Key` header
+4. **Handle errors** - Implements 401, 403, 422, 429 error handling
 
-## Endpoints Disponibles
+## Available Endpoints
 
-| Categoría    | Endpoint                             | Método | Descripción                   |
+| Category     | Endpoint                             | Method | Description                   |
 | ------------ | ------------------------------------ | ------ | ----------------------------- |
-| Balance      | `/api/public/v1/balance/checking`    | GET    | Balance cuenta checking       |
-| Balance      | `/api/public/v1/balance/stocks`      | GET    | Portfolio de inversión        |
-| Transactions | `/api/public/v1/transactions`        | GET    | Historial de transacciones    |
-| Trades       | `/api/public/v1/trades`              | POST   | Ejecutar compra/venta         |
-| Account      | `/api/public/v1/account-details`     | GET    | Detalles cuenta bancaria      |
-| Wallets      | `/api/public/v1/wallets`             | GET    | Direcciones de wallets crypto |
-| Assets       | `/api/public/v1/assets`              | GET    | Listar assets disponibles     |
-| Assets       | `/api/public/v1/assets/{symbol}`     | GET    | Info de asset específico      |
-| Operations   | `/api/public/v1/operations/internal` | POST   | Depósito/retiro inversión     |
+| Balance      | `/api/public/v1/balance/checking`    | GET    | Checking account balance      |
+| Balance      | `/api/public/v1/balance/stocks`      | GET    | Investment portfolio          |
+| Transactions | `/api/public/v1/transactions`        | GET    | Transaction history           |
+| Trades       | `/api/public/v1/trades`              | POST   | Execute buy/sell              |
+| Account      | `/api/public/v1/account-details`     | GET    | Bank account details          |
+| Wallets      | `/api/public/v1/wallets`             | GET    | Crypto wallet addresses       |
+| Assets       | `/api/public/v1/assets`              | GET    | List available assets         |
+| Assets       | `/api/public/v1/assets/{symbol}`     | GET    | Specific asset info           |
+| Operations   | `/api/public/v1/operations/internal` | POST   | Investment deposit/withdrawal |
 
-## Lenguajes Soportados
+## Supported Languages
 
-El skill incluye ejemplos y guías para:
+The skill includes examples and guides for:
 
-- **PHP/Laravel** - Con Illuminate HTTP Client
-- **JavaScript** - Fetch API nativo
+- **PHP/Laravel** - With Illuminate HTTP Client
+- **JavaScript** - Native Fetch API
 - **Python** - Requests library
 
-## Configuración
+## Configuration
 
-### Variables de Entorno
+### Environment Variables
 
 ```bash
 # PHP/Laravel
@@ -69,7 +69,7 @@ WALLBIT_API_KEY=your_api_key_here
 
 ### Laravel Config
 
-Agrega en `config/services.php`:
+Add in `config/services.php`:
 
 ```php
 'wallbit' => [
@@ -77,30 +77,30 @@ Agrega en `config/services.php`:
 ],
 ```
 
-## Estructura del Skill
+## Skill Structure
 
 ```
 skills/
-├── SKILL.md           # Definición principal del skill
-├── README.md          # Este archivo
-├── api-reference.md   # Documentación detallada de endpoints
-└── examples.md        # Ejemplos completos de código
+├── SKILL.md           # Main skill definition
+├── README.md          # This file
+├── api-reference.md   # Detailed endpoint documentation
+└── examples.md        # Complete code examples
 ```
 
-## Convenciones de Código
+## Code Conventions
 
-Este skill sigue las siguientes convenciones:
+This skill follows these conventions:
 
-- **Nomenclatura**: camelCase para funciones y variables
-- **Documentación**: Docstrings PHPDoc en todas las funciones
-- **Seguridad**: API Keys en variables de entorno, nunca hardcodeadas
-- **Manejo de errores**: Siempre incluir manejo de códigos 401, 403, 422, 429
+- **Naming**: camelCase for functions and variables
+- **Documentation**: PHPDoc docstrings on all functions
+- **Security**: API Keys in environment variables, never hardcoded
+- **Error handling**: Always include handling for codes 401, 403, 422, 429
 
-## Integración con Claude
+## Integration with Claude
 
 ### Claude Desktop (MCP)
 
-Para usar este skill con Claude Desktop, configura el archivo `claude_desktop_config.json`:
+To use this skill with Claude Desktop, configure the `claude_desktop_config.json` file:
 
 **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
 **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
@@ -120,17 +120,17 @@ Para usar este skill con Claude Desktop, configura el archivo `claude_desktop_co
 }
 ```
 
-Luego, puedes incluir el contenido de `SKILL.md` como contexto en tu conversación con Claude o usar la funcionalidad de Projects para agregarlo como conocimiento base.
+You can then include the content of `SKILL.md` as context in your conversation with Claude or use the Projects feature to add it as base knowledge.
 
 ### Claude API (System Prompt)
 
-Para integrar con la API de Claude, incluye el contenido del skill en el system prompt:
+To integrate with the Claude API, include the skill content in the system prompt:
 
 ```python
 import anthropic
 from pathlib import Path
 
-# Cargar el skill
+# Load the skill
 skill_content = Path("skills/SKILL.md").read_text()
 api_reference = Path("skills/api-reference.md").read_text()
 
@@ -139,15 +139,15 @@ client = anthropic.Anthropic()
 message = client.messages.create(
     model="claude-sonnet-4-20250514",
     max_tokens=4096,
-    system=f"""Eres un asistente experto en la API de Wallbit.
+    system=f"""You are an expert assistant for the Wallbit API.
 
 {skill_content}
 
-## Referencia de API
+## API Reference
 {api_reference}
 """,
     messages=[
-        {"role": "user", "content": "¿Cómo consulto mi balance en Wallbit?"}
+        {"role": "user", "content": "How do I check my Wallbit balance?"}
     ]
 )
 
@@ -156,23 +156,23 @@ print(message.content[0].text)
 
 ### Claude Projects
 
-1. Crea un nuevo proyecto en Claude
-2. En la sección "Project knowledge", sube los archivos:
+1. Create a new project in Claude
+2. In the "Project knowledge" section, upload the files:
    - `SKILL.md`
    - `api-reference.md`
    - `examples.md`
-3. Claude usará automáticamente este conocimiento en todas las conversaciones del proyecto
+3. Claude will automatically use this knowledge in all project conversations
 
-### Ejemplo de Prompt con Contexto
+### Example Prompt with Context
 
-Si no tienes acceso a Projects, puedes incluir el skill directamente:
+If you don't have access to Projects, you can include the skill directly:
 
 ```
-Contexto: Estoy trabajando con la API de Wallbit.
+Context: I am working with the Wallbit API.
 Base URL: https://api.wallbit.io
-Auth: Header X-API-Key
+Auth: X-API-Key header
 
-Endpoints disponibles:
+Available endpoints:
 - GET /api/public/v1/balance/checking
 - GET /api/public/v1/balance/stocks
 - GET /api/public/v1/transactions
@@ -183,15 +183,15 @@ Endpoints disponibles:
 - GET /api/public/v1/assets/{symbol}
 - POST /api/public/v1/operations/internal
 
-Mi pregunta: [tu pregunta aquí]
+My question: [your question here]
 ```
 
-## Recursos Adicionales
+## Additional Resources
 
-- [Documentación Oficial de Wallbit](https://api.wallbit.io/docs)
-- [api-reference.md](api-reference.md) - Referencia detallada de la API
-- [examples.md](examples.md) - Ejemplos de código
+- [Official Wallbit Documentation](https://api.wallbit.io/docs)
+- [api-reference.md](api-reference.md) - Detailed API reference
+- [examples.md](examples.md) - Code examples
 
-## Licencia
+## License
 
-Uso interno de Wallbit.
+Internal Wallbit use.
