@@ -1,221 +1,269 @@
 ---
-name: openclaw-skill
-description: Integration with OpenClaw: self-hosted gateway that connects WhatsApp, Telegram, Discord and other channels to AI agents. Use when working with OpenClaw, messaging gateway, channels (WhatsApp/Telegram/Discord), AI agent, openclaw CLI, openclaw.json configuration, tools (browser, exec, messaging), or when the user mentions OpenClaw.
+name: wallbit-skill
+version: 1.0.0
+description: Integration with the Wallbit public API for balances, transactions, trades, assets and wallets. Use when working with Wallbit API, trading endpoints, account balances, stock portfolio, investment operations, or when the user mentions Wallbit.
+metadata:
+  {
+    "openclaw":
+      {
+        "emoji": "📈",
+        "category": "finance",
+        "primaryEnv": "WALLBIT_API_KEY",
+        "requires": { "env": ["WALLBIT_API_KEY"] },
+      },
+  }
 ---
 
-# OpenClaw
+```
+WALLBIT API QUICK REFERENCE v1.0.0
+Base:   https://api.wallbit.io
+Auth:   X-API-Key: <WALLBIT_API_KEY>
+Docs:   This file is canonical (skills guide + params)
 
-Self-hosted gateway that connects messaging apps (WhatsApp, Telegram, Discord, iMessage, etc.) to AI agents. A single Gateway process on your machine or server acts as a bridge between channels and an always-available AI assistant.
+Key endpoints:
+  GET  /api/public/v1/balance/checking       -> checking account balance
+  GET  /api/public/v1/balance/stocks          -> investment portfolio
+  GET  /api/public/v1/transactions            -> transaction history
+  POST /api/public/v1/trades                  -> buy/sell (BUY/SELL)
+  GET  /api/public/v1/account-details          -> bank account details
+  GET  /api/public/v1/wallets                 -> crypto wallet addresses
+  GET  /api/public/v1/assets                  -> list assets
+  GET  /api/public/v1/assets/{symbol}         -> single asset info
+  POST /api/public/v1/operations/internal     -> deposit/withdraw to investment
+
+Rules: requests are JSON for POST | response data in "data" | camelCase for code
+Errors: HTTP status + JSON message/errors
+```
+
+# Wallbit Public API - Agent Skills Guide
+
+This skill is **doc-only**. Agents may use Wallbit MCP tools when available, or call the REST API directly.
+
+## Available MCP Tools
+
+When the Wallbit MCP server is configured, use these tools instead of building requests by hand:
+
+| MCP Tool                           | Endpoint                              | Description              |
+| ---------------------------------- | ------------------------------------- | ------------------------ |
+| `mcp_wallbit_get_checking_balance` | GET `/api/public/v1/balance/checking` | Checking account balance |
+| `mcp_wallbit_get_stocks_balance`   | GET `/api/public/v1/balance/stocks`   | Investment portfolio     |
+| `mcp_wallbit_list_transactions`    | GET `/api/public/v1/transactions`     | History with pagination  |
+| `mcp_wallbit_create_trade`         | POST `/api/public/v1/trades`          | Execute buy or sell      |
+| `mcp_wallbit_get_asset`            | GET `/api/public/v1/assets/{symbol}`  | Single asset info        |
+
+For account-details, wallets, listing assets with filters, and operations/internal, use the REST API directly (see examples below).
+
+## Base URL and authentication
+
+- **Base URL**: `https://api.wallbit.io`
+- **Header**: `X-API-Key: <WALLBIT_API_KEY>`
+- **Content-Type**: `application/json` (POST)
+- **Accept**: `application/json`
+
+```bash
+export WALLBIT_API_URL="https://api.wallbit.io"
+export WALLBIT_API_KEY="your_api_key"
+```
+
+## Tool -> Endpoint Map
+
+| Tool / Action        | Method | Path                                 | Params/Body                                                                                                                               |
+| -------------------- | ------ | ------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| get_checking_balance | GET    | `/api/public/v1/balance/checking`    | —                                                                                                                                         |
+| get_stocks_balance   | GET    | `/api/public/v1/balance/stocks`      | —                                                                                                                                         |
+| list_transactions    | GET    | `/api/public/v1/transactions`        | Query: `page`, `limit`, `status`, `type`, `currency`, `from_date`, `to_date`, `from_amount`, `to_amount`                                  |
+| create_trade         | POST   | `/api/public/v1/trades`              | Body: `symbol`, `direction` (BUY/SELL), `currency`, `order_type`, `amount` or `shares`, opt. `limit_price`, `stop_price`, `time_in_force` |
+| get_account_details  | GET    | `/api/public/v1/account-details`     | Query: `country`, `currency`                                                                                                              |
+| get_wallets          | GET    | `/api/public/v1/wallets`             | Query: `currency`, `network`                                                                                                              |
+| list_assets          | GET    | `/api/public/v1/assets`              | Query: `category`, `search`, `page`, `limit`                                                                                              |
+| get_asset            | GET    | `/api/public/v1/assets/{symbol}`     | Path: `symbol`                                                                                                                            |
+| internal_transfer    | POST   | `/api/public/v1/operations/internal` | Body: `currency`, `from` (DEFAULT/INVESTMENT), `to`, `amount`                                                                             |
+
+Body field names: see [api-reference.md](api-reference.md) (API uses snake_case, e.g. `limit_price`, `time_in_force`). In PHP/Laravel code use camelCase and docstrings.
 
 ## Quick Start
 
-**Requirements**: Node 22+, API key (Anthropic recommended).
+### 1) Balance checking
 
 ```bash
-npm install -g openclaw@latest
-openclaw onboard --install-daemon
-openclaw channels login
-openclaw gateway --port 18789
+curl -sS "$WALLBIT_API_URL/api/public/v1/balance/checking" \
+  -H "X-API-Key: $WALLBIT_API_KEY" \
+  -H "Accept: application/json"
 ```
 
-Default dashboard: `http://127.0.0.1:18789/`
-
-## CLI Overview
-
-| Category    | Main command                   | Description                          |
-| ----------- | ------------------------------ | ------------------------------------ |
-| Setup       | `openclaw onboard`             | Installation and configuration wizard |
-| Setup       | `openclaw setup`               | Initialize config and workspace       |
-| Setup       | `openclaw configure`           | Configuration wizard                  |
-| Config      | `openclaw config get/set/unset` | Read/write config (dot path)         |
-| Gateway     | `openclaw gateway`             | Run or manage the Gateway             |
-| Gateway     | `openclaw gateway start/stop`  | Gateway service                       |
-| Gateway     | `openclaw health`              | Gateway health                        |
-| Channels    | `openclaw channels list`       | List configured channels              |
-| Channels    | `openclaw channels login`      | Interactive login (e.g. WhatsApp)     |
-| Channels    | `openclaw channels add/remove` | Add or remove a channel               |
-| Models      | `openclaw models list`         | List configured models                |
-| Models      | `openclaw models set <model>`  | Set primary model                     |
-| Models      | `openclaw models status`       | Auth status and current model         |
-| Agents      | `openclaw agents list`         | List agents                           |
-| Agents      | `openclaw agents add/delete`   | Add or remove an agent                |
-| Agent       | `openclaw agent --message "…"` | Run one agent turn                    |
-| Sessions    | `openclaw sessions`            | List sessions                         |
-| Cron        | `openclaw cron list/add/rm`    | Scheduled tasks                       |
-| Browser     | `openclaw browser start/stop`  | Managed browser                       |
-| Logs        | `openclaw logs --follow`       | View Gateway logs                     |
-| Doctor      | `openclaw doctor`              | Diagnostics and fixes                 |
-| Status      | `openclaw status --all`        | Full status (pasteable)               |
-
-## Configuration
-
-Main config: `~/.openclaw/openclaw.json` (JSON5).
-
-Main key structure:
-
-```json5
-{
-  channels: {
-    whatsapp: { allowFrom: ["+15555550123"], groups: { "*": { requireMention: true } } },
-    telegram: { /* token, etc. */ },
-    discord: { /* token, etc. */ },
-  },
-  agents: {
-    defaults: {
-      model: { primary: "anthropic/claude-sonnet-4-5", fallbacks: [] },
-      imageModel: { primary: "...", fallbacks: [] },
-      models: { /* allowlist + aliases */ },
-    },
-    list: [
-      { id: "main", workspace: "~/.openclaw/workspace", bindings: ["whatsapp:default"] },
-    ],
-  },
-  tools: {
-    profile: "full",   // full | messaging | coding | minimal
-    allow: [],
-    deny: [],
-  },
-  messages: { groupChat: { mentionPatterns: ["@openclaw"] } },
-  gateway: {
-    auth: { mode: "token", token: "..." },
-    http: { endpoints: { chatCompletions: { enabled: true } } },
-  },
-}
-```
-
-- **channels**: Per-channel config (allowFrom, groups, tokens).
-- **agents.defaults**: Primary model, fallbacks, model allowlist.
-- **agents.list**: Isolated agents with workspace and per-channel bindings.
-- **tools**: Profile (full, messaging, coding, minimal), allow/deny list for tools.
-- **gateway.auth**: token or password for CLI and HTTP API.
-
-## Channels
-
-Supported channels: WhatsApp, Telegram, Discord, Slack, Google Chat, Mattermost (plugin), Signal, iMessage, MS Teams.
-
-### WhatsApp
+### 2) Stock portfolio
 
 ```bash
-openclaw channels login --channel whatsapp
-# Scan QR with WhatsApp Web
-openclaw channels status --channel whatsapp
+curl -sS "$WALLBIT_API_URL/api/public/v1/balance/stocks" \
+  -H "X-API-Key: $WALLBIT_API_KEY" \
+  -H "Accept: application/json"
 ```
 
-Restrict senders in config: `channels.whatsapp.allowFrom: ["+15555550123"]`. In groups: `requireMention: true`.
-
-### Telegram
+### 3) Market buy
 
 ```bash
-openclaw channels add --channel telegram --account default --token $TELEGRAM_BOT_TOKEN
-openclaw channels status --channel telegram
+curl -sS -X POST "$WALLBIT_API_URL/api/public/v1/trades" \
+  -H "X-API-Key: $WALLBIT_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "symbol": "AAPL",
+    "direction": "BUY",
+    "currency": "USD",
+    "order_type": "MARKET",
+    "amount": 100
+  }'
 ```
 
-### Discord
+## Examples by category
+
+### Transactions (history)
 
 ```bash
-openclaw channels add --channel discord --account work --token $DISCORD_BOT_TOKEN
-openclaw channels remove --channel discord --account work --delete
+curl -sS "$WALLBIT_API_URL/api/public/v1/transactions?page=1&limit=10&status=COMPLETED" \
+  -H "X-API-Key: $WALLBIT_API_KEY" \
+  -H "Accept: application/json"
 ```
 
-## Models
-
-Selection order: 1) failover within provider, 2) fallbacks in order, 3) primary model.
-
-Config keys: `agents.defaults.model.primary`, `agents.defaults.model.fallbacks`, `agents.defaults.imageModel.primary`, `agents.defaults.models` (allowlist).
+### Market sell
 
 ```bash
-openclaw models set anthropic/claude-sonnet-4-5
-openclaw models fallbacks add openai/gpt-4o
-openclaw models status --check
+curl -sS -X POST "$WALLBIT_API_URL/api/public/v1/trades" \
+  -H "X-API-Key: $WALLBIT_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "symbol": "TSLA",
+    "direction": "SELL",
+    "currency": "USD",
+    "order_type": "MARKET",
+    "shares": 2.5
+  }'
 ```
 
-Recommended auth for Anthropic: `claude setup-token` then `openclaw models auth setup-token --provider anthropic`. If `agents.defaults.models` is defined, only those models are allowed; if a user picks another, OpenClaw responds "Model ... is not allowed".
-
-## Tools
-
-Tools exposed to the agent (configurable with `tools.profile`, `tools.allow`, `tools.deny`):
-
-| Tool / Group    | Description                                                   |
-| --------------- | ------------------------------------------------------------- |
-| `browser`       | Managed browser: navigate, snapshot, click, type, screenshot  |
-| `exec`          | Run commands in workspace/sandbox/gateway/node                |
-| `process`       | Manage background exec sessions                               |
-| `message`       | Send messages and actions in Discord/Telegram/WhatsApp/etc.   |
-| `web_search`    | Web search (Brave API)                                        |
-| `web_fetch`     | Fetch URL and extract content (markdown/text)                 |
-| `canvas`        | Canvas on nodes: present, snapshot, a2ui_push                 |
-| `nodes`         | Notifications, run, camera, screen on nodes                   |
-| `cron`          | Manage Gateway cron jobs                                      |
-| `gateway`       | config.get/patch/apply, restart                               |
-| `sessions_*`    | sessions_list, sessions_history, sessions_send, sessions_spawn, session_status |
-| `group:fs`      | read, write, edit, apply_patch                                |
-| `group:runtime` | exec, bash, process                                           |
-
-Profiles: `full` (no restriction), `messaging`, `coding`, `minimal`.
-
-## Agents
-
-Multi-agent routing: each agent can have its own workspace, model and per-channel bindings.
+### Limit order
 
 ```bash
-openclaw agents list
-openclaw agents add support --workspace ~/support-workspace --bind "slack:default"
-openclaw agents delete support --force
+curl -sS -X POST "$WALLBIT_API_URL/api/public/v1/trades" \
+  -H "X-API-Key: $WALLBIT_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "symbol": "AAPL",
+    "direction": "BUY",
+    "currency": "USD",
+    "order_type": "LIMIT",
+    "amount": 200,
+    "limit_price": 170,
+    "time_in_force": "GTC"
+  }'
 ```
 
-Bindings: `channel[:accountId]` (e.g. `whatsapp:default`, `telegram:alerts`). The `main` agent is the default.
+### Account details (bank account)
 
-Run one turn from CLI: `openclaw agent --message "Summarize this text" --session-id my-session`.
-
-## Error Handling / Troubleshooting
-
-| Command / Situation  | Use |
-| -------------------- | --- |
-| `openclaw doctor`    | Check config, Gateway and services; apply safe fixes |
-| `openclaw doctor --deep` | Also search for other Gateways in the system |
-| `openclaw status --all` | Full diagnostic as pasteable text |
-| `openclaw status --deep` | Include channel probe |
-| `openclaw health`    | Gateway health (RPC) |
-| `openclaw gateway status` | Service status and port |
-| `openclaw logs --follow` | View logs in real time |
-| `openclaw security audit` | Review permissions and security config |
-
-If the model does not respond: verify the model is in `agents.defaults.models` (if an allowlist exists) and that provider auth is configured (`openclaw models status`).
-
-## HTTP API (Chat Completions)
-
-The Gateway can expose an OpenAI-compatible endpoint. Enable in config:
-
-```json5
-{
-  gateway: {
-    http: {
-      endpoints: { chatCompletions: { enabled: true } },
-    },
-  },
-}
+```bash
+curl -sS "$WALLBIT_API_URL/api/public/v1/account-details?country=US&currency=USD" \
+  -H "X-API-Key: $WALLBIT_API_KEY" \
+  -H "Accept: application/json"
 ```
 
-- **URL**: `POST http://<host>:<port>/v1/chat/completions` (same port as the Gateway, e.g. 18789).
-- **Auth**: `Authorization: Bearer <token>` (uses `gateway.auth.token` or `OPENCLAW_GATEWAY_TOKEN`).
-- **Agent**: header `x-openclaw-agent-id: main` or in the body `model: "openclaw:main"`.
-- **Stable session**: send `user` in the body to derive a session key and maintain context.
+### Crypto wallets
 
-See [cli-reference.md](../examples/cli-reference.md) for all commands and [examples.md](../examples/examples.md) for code.
+```bash
+curl -sS "$WALLBIT_API_URL/api/public/v1/wallets?currency=USDC&network=ethereum" \
+  -H "X-API-Key: $WALLBIT_API_KEY" \
+  -H "Accept: application/json"
+```
 
-## Code Generation Guidelines
+### List assets (with filters)
 
-When generating code that interacts with OpenClaw:
+```bash
+curl -sS "$WALLBIT_API_URL/api/public/v1/assets?category=TECHNOLOGY&search=apple&page=1&limit=20" \
+  -H "X-API-Key: $WALLBIT_API_KEY" \
+  -H "Accept: application/json"
+```
 
-1. **Naming**: camelCase for functions and variables; docstrings on all functions.
-2. **Config**: Do not hardcode tokens or passwords; use environment variables (e.g. `OPENCLAW_GATEWAY_TOKEN`, `OPENCLAW_GATEWAY_URL`).
-3. **HTTP API**: When using `/v1/chat/completions`, always send `Authorization: Bearer` and optionally `x-openclaw-agent-id`.
-4. **Webhooks**: Validate origin and signature if OpenClaw calls your server; document in docstrings.
-5. **CLI**: For scripts, use `openclaw --json` where available for machine-readable output; `--non-interactive` and explicit flags in automated flows.
-6. **Error handling**: Check HTTP codes and error body; for the Gateway, 429 with `Retry-After` on rate limit.
+### Single asset info
+
+```bash
+curl -sS "$WALLBIT_API_URL/api/public/v1/assets/AAPL" \
+  -H "X-API-Key: $WALLBIT_API_KEY" \
+  -H "Accept: application/json"
+```
+
+### Deposit to investment (DEFAULT → INVESTMENT)
+
+```bash
+curl -sS -X POST "$WALLBIT_API_URL/api/public/v1/operations/internal" \
+  -H "X-API-Key: $WALLBIT_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "currency": "USD",
+    "from": "DEFAULT",
+    "to": "INVESTMENT",
+    "amount": 500
+  }'
+```
+
+### Withdrawal from investment (INVESTMENT → DEFAULT)
+
+```bash
+curl -sS -X POST "$WALLBIT_API_URL/api/public/v1/operations/internal" \
+  -H "X-API-Key: $WALLBIT_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "currency": "USD",
+    "from": "INVESTMENT",
+    "to": "DEFAULT",
+    "amount": 200
+  }'
+```
+
+## Error Handling
+
+| Code | Description                       | Action                                                        |
+| ---- | --------------------------------- | ------------------------------------------------------------- |
+| 401  | Invalid or missing API Key        | Check X-API-Key header                                        |
+| 403  | Insufficient permissions          | Check API Key permissions                                     |
+| 412  | Incomplete KYC or blocked account | Complete verification in app                                  |
+| 422  | Validation error                  | Check body/query against [api-reference.md](api-reference.md) |
+| 429  | Rate limit exceeded               | Wait `retry_after` seconds                                    |
+
+Error responses include `message` and sometimes `errors` (validation) or `your_permissions` (403).
+
+## Rate Limiting
+
+Response headers:
+
+- `X-RateLimit-Limit`: requests per minute allowed
+- `X-RateLimit-Remaining`: remaining requests
+- `X-RateLimit-Reset`: Unix timestamp of reset
+- `Retry-After`: seconds until retry (on 429)
+
+## Quick reference
+
+### Supported currencies
+
+- Transactions: USD, EUR, ARS, MXN, USDC, USDT, BOB, COP, PEN, DOP
+- Account details: USD, EUR (countries: US, EU)
+- Wallets: USDT, USDC (networks: ethereum, arbitrum, solana, polygon, tron)
+
+### Asset categories
+
+MOST_POPULAR, ETF, DIVIDENDS, TECHNOLOGY, HEALTH, CONSUMER_GOODS, ENERGY_AND_WATER, FINANCE, REAL_ESTATE, TREASURY_BILLS, VIDEOGAMES, ARGENTINA_ADR
+
+### Order types (trades)
+
+- `MARKET`: market price (requires `amount` or `shares`)
+- `LIMIT`: requires `limit_price` and `time_in_force` (DAY, GTC)
+- `STOP`: requires `stop_price`
+- `STOP_LIMIT`: requires `stop_price` and `limit_price`
+
+## Code generation guidelines
+
+1. **PHP/Laravel**: camelCase for functions, PHPDoc docstrings on all functions
+2. Validate parameters against OpenAPI / api-reference types
+3. Always handle 401, 403, 412, 422, 429
+4. Do not hardcode API keys; use environment variables
 
 ## Additional Resources
 
-- Official documentation: https://docs.openclaw.ai/
-- Detailed CLI reference: [cli-reference.md](../examples/cli-reference.md)
-- Code examples: [examples.md](../examples/examples.md)
+- Detailed endpoint documentation: [api-reference.md](api-reference.md)
+- Full PHP, JavaScript, Python examples: [examples.md](examples.md)
