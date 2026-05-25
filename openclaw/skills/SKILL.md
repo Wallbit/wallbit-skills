@@ -74,22 +74,22 @@ export WALLBIT_API_KEY="your_api_key"
 
 ## Tool -> Endpoint Map
 
-| Tool / Action        | Method | Path                                 | Params/Body                                                                                                                               |
-| -------------------- | ------ | ------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| get_checking_balance | GET    | `/api/public/v1/balance/checking`    | —                                                                                                                                         |
-| get_stocks_balance   | GET    | `/api/public/v1/balance/stocks`      | —                                                                                                                                         |
-| list_transactions    | GET    | `/api/public/v1/transactions`        | Query: `page`, `limit`, `status`, `type`, `currency`, `from_date`, `to_date`, `from_amount`, `to_amount`                                  |
-| create_trade         | POST   | `/api/public/v1/trades`              | Body: `symbol`, `direction` (BUY/SELL), `currency`, `order_type`, `amount` or `shares`, opt. `limit_price`, `stop_price`, `time_in_force` |
-| get_fees             | POST   | `/api/public/v1/fees`                | Body: `type` (`TRADE`) — requires `read`                                                                                                  |
-| get_account_details  | GET    | `/api/public/v1/account-details`     | Query: `country`, `currency`                                                                                                              |
-| get_wallets          | GET    | `/api/public/v1/wallets`             | Query: `currency`, `network`                                                                                                              |
-| get_exchange_rate    | GET    | `/api/public/v1/rates`               | Query: `source_currency`, `dest_currency` (required) — requires `read`                                                                    |
-| list_assets          | GET    | `/api/public/v1/assets`              | Query: `category`, `search`, `page`, `limit`                                                                                              |
-| get_asset            | GET    | `/api/public/v1/assets/{symbol}`     | Path: `symbol`                                                                                                                            |
-| internal_transfer    | POST   | `/api/public/v1/operations/internal` | Body: `currency`, `from` (DEFAULT/INVESTMENT), `to`, `amount`                                                                             |
-| list_cards           | GET    | `/api/public/v1/cards`               | — — requires `read`                                                                                                                       |
-| update_card_status   | PATCH  | `/api/public/v1/cards/{cardUuid}/status` | Path: `cardUuid`; Body: `status` (ACTIVE/SUSPENDED) — requires `trade`                                                               |
-| revoke_api_key       | DELETE | `/api/public/v1/api-key`             | — (revokes the key sent in X-API-Key)                                                                                                     |
+| Tool / Action        | Method | Path                                     | Params/Body                                                                                                                               |
+| -------------------- | ------ | ---------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| get_checking_balance | GET    | `/api/public/v1/balance/checking`        | —                                                                                                                                         |
+| get_stocks_balance   | GET    | `/api/public/v1/balance/stocks`          | —                                                                                                                                         |
+| list_transactions    | GET    | `/api/public/v1/transactions`            | Query: `page`, `limit`, `status`, `type`, `currency`, `from_date`, `to_date`, `from_amount`, `to_amount`                                  |
+| create_trade         | POST   | `/api/public/v1/trades`                  | Body: `symbol`, `direction` (BUY/SELL), `currency`, `order_type`, `amount` or `shares`, opt. `limit_price`, `stop_price`, `time_in_force` |
+| get_fees             | POST   | `/api/public/v1/fees`                    | Body: `type` (`TRADE`) — requires `read`                                                                                                  |
+| get_account_details  | GET    | `/api/public/v1/account-details`         | Query: `country`, `currency`                                                                                                              |
+| get_wallets          | GET    | `/api/public/v1/wallets`                 | Query: `currency`, `network`                                                                                                              |
+| get_exchange_rate    | GET    | `/api/public/v1/rates`                   | Query: `source_currency`, `dest_currency` (required) — requires `read`                                                                    |
+| list_assets          | GET    | `/api/public/v1/assets`                  | Query: `category`, `search`, `page`, `limit`                                                                                              |
+| get_asset            | GET    | `/api/public/v1/assets/{symbol}`         | Path: `symbol`                                                                                                                            |
+| internal_transfer    | POST   | `/api/public/v1/operations/internal`     | Body: `currency`, `from` (DEFAULT/INVESTMENT), `to`, `amount`                                                                             |
+| list_cards           | GET    | `/api/public/v1/cards`                   | — — requires `read`                                                                                                                       |
+| update_card_status   | PATCH  | `/api/public/v1/cards/{cardUuid}/status` | Path: `cardUuid`; Body: `status` (ACTIVE/SUSPENDED) — requires `trade`                                                                    |
+| revoke_api_key       | DELETE | `/api/public/v1/api-key`                 | — (revokes the key sent in X-API-Key)                                                                                                     |
 
 Body field names: see [api-reference.md](../../examples/api-reference.md) (API uses snake_case, e.g. `limit_price`, `time_in_force`). In PHP/Laravel code use camelCase and docstrings.
 
@@ -272,16 +272,16 @@ curl -sS -X DELETE "$WALLBIT_API_URL/api/public/v1/api-key" \
 
 ## Error Handling
 
-| Code | Description                       | Action                                                        |
-| ---- | --------------------------------- | ------------------------------------------------------------- |
-| 400  | Insufficient funds (trades)       | Check balance before trading                                  |
-| 401  | Invalid or missing API Key        | Check X-API-Key header                                        |
-| 403  | Insufficient permissions          | Check API Key permissions (`read`, `trade`)                   |
-| 404  | Not found (asset, rate pair, card)| Verify path/query parameters                                  |
-| 412  | Incomplete KYC or blocked account | Complete verification in app                                  |
-| 422  | Validation error                  | Check body/query against [api-reference.md](../../examples/api-reference.md) |
-| 429  | Rate limit exceeded               | Wait `retry_after` seconds                                    |
-| 503  | Provider unavailable (cards)      | Retry later                                                   |
+| Code | Description                        | Action                                                                       |
+| ---- | ---------------------------------- | ---------------------------------------------------------------------------- |
+| 400  | Insufficient funds (trades)        | Check balance before trading                                                 |
+| 401  | Invalid or missing API Key         | Check X-API-Key header                                                       |
+| 403  | Insufficient permissions           | Check API Key permissions (`read`, `trade`)                                  |
+| 404  | Not found (asset, rate pair, card) | Verify path/query parameters                                                 |
+| 412  | Incomplete KYC or blocked account  | Complete verification in app                                                 |
+| 422  | Validation error                   | Check body/query against [api-reference.md](../../examples/api-reference.md) |
+| 429  | Rate limit exceeded                | Wait `retry_after` seconds                                                   |
+| 503  | Provider unavailable (cards)       | Retry later                                                                  |
 
 Error responses include `message` and sometimes `errors` (validation) or `your_permissions` (403).
 
@@ -325,12 +325,6 @@ MOST_POPULAR, ETF, DIVIDENDS, TECHNOLOGY, HEALTH, CONSUMER_GOODS, ENERGY_AND_WAT
 
 ## Code generation guidelines
 
-1. **PHP/Laravel**: camelCase for functions, PHPDoc docstrings on all functions
-2. Validate parameters against OpenAPI / api-reference types
-3. Always handle 400, 401, 403, 404, 412, 422, 429 (503 for cards)
-4. Do not hardcode API keys; use environment variables
-
-## Additional Resources
-
-- Detailed endpoint documentation: [api-reference.md](../../examples/api-reference.md)
-- Full PHP, JavaScript, Python examples: [examples.md](../examples/examples.md)
+1. Validate parameters against OpenAPI / api-reference types
+2. Always handle 400, 401, 403, 404, 412, 422, 429 (503 for cards)
+3. Do not hardcode API keys; use environment variables

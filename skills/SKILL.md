@@ -23,22 +23,22 @@ curl -H "X-API-Key: $WALLBIT_API_KEY" \
 
 ## Endpoints Overview
 
-| Category        | Endpoint                                  | Method | Description                                      |
-| --------------- | ----------------------------------------- | ------ | ------------------------------------------------ |
-| Balance         | `/api/public/v1/balance/checking`         | GET    | Checking account balance (positive currencies)   |
-| Balance         | `/api/public/v1/balance/stocks`           | GET    | Investment portfolio (stocks + USD cash)         |
-| Transactions    | `/api/public/v1/transactions`             | GET    | Transaction history (pagination + filters)       |
-| Trades          | `/api/public/v1/trades`                   | POST   | Execute buy/sell                                 |
-| Fees            | `/api/public/v1/fees`                     | POST   | Fee config for user tier (`type`: TRADE)         |
-| Account Details | `/api/public/v1/account-details`          | GET    | Bank account details (US/EU)                     |
-| Wallets         | `/api/public/v1/wallets`                  | GET    | Crypto wallet addresses                          |
-| Rates           | `/api/public/v1/rates`                    | GET    | Fiat exchange rate for a currency pair           |
-| Assets          | `/api/public/v1/assets`                   | GET    | List available assets                            |
-| Assets          | `/api/public/v1/assets/{symbol}`          | GET    | Specific asset info                              |
-| Operations      | `/api/public/v1/operations/internal`      | POST   | Deposit/withdraw between DEFAULT ↔ INVESTMENT    |
-| Cards           | `/api/public/v1/cards`                    | GET    | List active or suspended cards                   |
-| Cards           | `/api/public/v1/cards/{cardUuid}/status`  | PATCH  | Block (`SUSPENDED`) or unblock (`ACTIVE`) card     |
-| API Key         | `/api/public/v1/api-key`                  | DELETE | Revoke the API key used in the request           |
+| Category        | Endpoint                                 | Method | Description                                    |
+| --------------- | ---------------------------------------- | ------ | ---------------------------------------------- |
+| Balance         | `/api/public/v1/balance/checking`        | GET    | Checking account balance (positive currencies) |
+| Balance         | `/api/public/v1/balance/stocks`          | GET    | Investment portfolio (stocks + USD cash)       |
+| Transactions    | `/api/public/v1/transactions`            | GET    | Transaction history (pagination + filters)     |
+| Trades          | `/api/public/v1/trades`                  | POST   | Execute buy/sell                               |
+| Fees            | `/api/public/v1/fees`                    | POST   | Fee config for user tier (`type`: TRADE)       |
+| Account Details | `/api/public/v1/account-details`         | GET    | Bank account details (US/EU)                   |
+| Wallets         | `/api/public/v1/wallets`                 | GET    | Crypto wallet addresses                        |
+| Rates           | `/api/public/v1/rates`                   | GET    | Fiat exchange rate for a currency pair         |
+| Assets          | `/api/public/v1/assets`                  | GET    | List available assets                          |
+| Assets          | `/api/public/v1/assets/{symbol}`         | GET    | Specific asset info                            |
+| Operations      | `/api/public/v1/operations/internal`     | POST   | Deposit/withdraw between DEFAULT ↔ INVESTMENT  |
+| Cards           | `/api/public/v1/cards`                   | GET    | List active or suspended cards                 |
+| Cards           | `/api/public/v1/cards/{cardUuid}/status` | PATCH  | Block (`SUSPENDED`) or unblock (`ACTIVE`) card |
+| API Key         | `/api/public/v1/api-key`                 | DELETE | Revoke the API key used in the request         |
 
 ## Authentication
 
@@ -220,8 +220,3 @@ Some endpoints require scopes on the API key:
 
 - `ACTIVE`: card unblocked
 - `SUSPENDED`: card blocked
-
-## Additional Resources
-
-- For detailed endpoint documentation, see [api-reference.md](../examples/api-reference.md)
-- For complete code examples, see [examples.md](../examples/examples.md)
