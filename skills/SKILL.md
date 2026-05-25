@@ -1,35 +1,44 @@
 ---
 name: wallbit-skills
-description: Integration with the Wallbit public API to query balances, transactions, execute trades, get asset and wallet data. Use when working with Wallbit API, trading endpoints, account balances, stock portfolio, investment operations, or when the user mentions Wallbit.
+description: Integration with the Wallbit public API to query balances, transactions, execute trades, fees, exchange rates, assets, wallets, cards, and API key management. Use when working with Wallbit API, trading endpoints, account balances, stock portfolio, investment operations, or when the user mentions Wallbit.
 ---
 
 # Wallbit Public API
 
-REST API to integrate Wallbit functionality: query balances, view transaction history, execute trades and more.
+REST API to integrate Wallbit functionality: query balances, view transaction history, execute trades, get fee configuration, exchange rates, manage cards, and more.
+
+**OpenAPI source**: `api-wallbit/docs/public-api/openapi-public-api.json` (v1.0.0)
 
 ## Quick Start
 
-**Base URL**: `https://api.wallbit.io`
+**Base URL**: `https://api.wallbit.io` (local: `http://localhost`)
 
 **Authentication**: `X-API-Key` header required on all requests.
 
 ```bash
-curl -H "X-API-Key: YOUR_API_KEY" https://api.wallbit.io/api/public/v1/balance/checking
+curl -H "X-API-Key: $WALLBIT_API_KEY" \
+  -H "Accept: application/json" \
+  https://api.wallbit.io/api/public/v1/balance/checking
 ```
 
 ## Endpoints Overview
 
-| Category     | Endpoint                             | Method | Description                   |
-| ------------ | ------------------------------------ | ------ | ----------------------------- |
-| Balance      | `/api/public/v1/balance/checking`    | GET    | Checking account balance      |
-| Balance      | `/api/public/v1/balance/stocks`      | GET    | Investment portfolio          |
-| Transactions | `/api/public/v1/transactions`        | GET    | Transaction history           |
-| Trades       | `/api/public/v1/trades`              | POST   | Execute buy/sell              |
-| Account      | `/api/public/v1/account-details`     | GET    | Bank account details          |
-| Wallets      | `/api/public/v1/wallets`             | GET    | Crypto wallet addresses       |
-| Assets       | `/api/public/v1/assets`              | GET    | List available assets         |
-| Assets       | `/api/public/v1/assets/{symbol}`     | GET    | Specific asset info           |
-| Operations   | `/api/public/v1/operations/internal` | POST   | Investment deposit/withdrawal |
+| Category        | Endpoint                                  | Method | Description                                      |
+| --------------- | ----------------------------------------- | ------ | ------------------------------------------------ |
+| Balance         | `/api/public/v1/balance/checking`         | GET    | Checking account balance (positive currencies)   |
+| Balance         | `/api/public/v1/balance/stocks`           | GET    | Investment portfolio (stocks + USD cash)         |
+| Transactions    | `/api/public/v1/transactions`             | GET    | Transaction history (pagination + filters)       |
+| Trades          | `/api/public/v1/trades`                   | POST   | Execute buy/sell                                 |
+| Fees            | `/api/public/v1/fees`                     | POST   | Fee config for user tier (`type`: TRADE)         |
+| Account Details | `/api/public/v1/account-details`          | GET    | Bank account details (US/EU)                     |
+| Wallets         | `/api/public/v1/wallets`                  | GET    | Crypto wallet addresses                          |
+| Rates           | `/api/public/v1/rates`                    | GET    | Fiat exchange rate for a currency pair           |
+| Assets          | `/api/public/v1/assets`                   | GET    | List available assets                            |
+| Assets          | `/api/public/v1/assets/{symbol}`          | GET    | Specific asset info                              |
+| Operations      | `/api/public/v1/operations/internal`      | POST   | Deposit/withdraw between DEFAULT ↔ INVESTMENT    |
+| Cards           | `/api/public/v1/cards`                    | GET    | List active or suspended cards                   |
+| Cards           | `/api/public/v1/cards/{cardUuid}/status`  | PATCH  | Block (`SUSPENDED`) or unblock (`ACTIVE`) card     |
+| API Key         | `/api/public/v1/api-key`                  | DELETE | Revoke the API key used in the request           |
 
 ## Authentication
 
@@ -96,13 +105,16 @@ class WallbitClient:
 
 ## Error Handling
 
-| Code | Description                          | Action                              |
-| ---- | ------------------------------------ | ----------------------------------- |
-| 401  | Invalid or missing API Key           | Check X-API-Key header              |
-| 403  | Insufficient permissions             | Check API Key permissions           |
-| 412  | Incomplete KYC or blocked account    | Complete verification in the app    |
-| 422  | Validation error                     | Review sent parameters              |
-| 429  | Rate limit exceeded                  | Wait `retry_after` seconds          |
+| Code | Description                       | Action                           |
+| ---- | --------------------------------- | -------------------------------- |
+| 400  | Insufficient funds (trades)       | Check balance before trading     |
+| 401  | Invalid or missing API Key        | Check X-API-Key header           |
+| 403  | Insufficient permissions          | Check API Key permissions        |
+| 404  | Resource not found                | Verify symbol, rate pair, card   |
+| 412  | Incomplete KYC or blocked account | Complete verification in the app |
+| 422  | Validation error                  | Review sent parameters           |
+| 429  | Rate limit exceeded               | Wait `retry_after` seconds       |
+| 503  | Provider unavailable (cards)      | Retry later                      |
 
 ### Error handling example (PHP/Laravel)
 
@@ -123,6 +135,8 @@ function wallbitRequest(string $method, string $endpoint, array $data = []): arr
     $response = match($method) {
         'GET' => $client->get($endpoint, $data),
         'POST' => $client->post($endpoint, $data),
+        'PATCH' => $client->patch($endpoint, $data),
+        'DELETE' => $client->delete($endpoint, $data),
         default => throw new \Exception("Unsupported method: {$method}")
     };
 
@@ -149,7 +163,7 @@ function wallbitRequest(string $method, string $endpoint, array $data = []): arr
         throw new \Exception($response->json('message', 'Unknown error'));
     }
 
-    return $response->json('data');
+    return $response->json('data') ?? $response->json();
 }
 ```
 
@@ -168,14 +182,24 @@ When generating code for this API:
 
 1. **PHP/Laravel**: Use camelCase for functions, include PHPDoc docstrings
 2. **Validate parameters** before sending according to OpenAPI spec types
-3. **Always handle errors** 401, 403, 422, 429
+3. **Always handle errors** 400, 401, 403, 404, 412, 422, 429 (503 for cards)
 4. **Do not hardcode API Keys**, use environment variables
+5. **Request body fields** use snake_case in JSON (`limit_price`, `time_in_force`); use camelCase in application code
 
 ### Supported currencies
 
-- Transactions: `USD`, `EUR`, `ARS`, `MXN`, `USDC`, `USDT`, `BOB`, `COP`, `PEN`, `DOP`
-- Account Details: `USD`, `EUR` (countries: `US`, `EU`)
-- Wallets: `USDT`, `USDC` (networks: `ethereum`, `arbitrum`, `solana`, `polygon`, `tron`)
+- **Transactions** (`currency` filter): `USD`, `EUR`, `ARS`, `MXN`, `USDC`, `USDT`, `BOB`, `COP`, `PEN`, `DOP`, `BRL`, `PHP`, `CLP`, `GTQ`, `PAB`, `CRC`
+- **Account Details**: `USD`, `EUR` (countries: `US`, `EU`)
+- **Wallets**: `USDT`, `USDC` (networks: `ethereum`, `arbitrum`, `solana`, `polygon`, `tron`)
+- **Rates**: any valid Wallbit currency code for `source_currency` and `dest_currency`
+
+### API Key permissions
+
+Some endpoints require scopes on the API key:
+
+- **`read`**: balances, transactions, account-details, wallets, rates, assets, fees, list cards
+- **`trade`**: trades, internal operations, update card status
+- **Revoke API key** (`DELETE /api-key`): any valid key may revoke itself (no `read`/`trade` required)
 
 ### Asset Categories
 
@@ -183,12 +207,21 @@ When generating code for this API:
 
 ### Trade Order Types
 
-- `MARKET`: Market order (executes immediately)
-- `LIMIT`: Limit order (requires `limit_price` and `time_in_force`)
+- `MARKET`: Market order (executes immediately; use `amount` or `shares`, not both)
+- `LIMIT`: Limit order (requires `limit_price` and `time_in_force`: `DAY` or `GTC`)
 - `STOP`: Stop order (requires `stop_price`)
 - `STOP_LIMIT`: Stop-limit order (requires `stop_price` and `limit_price`)
 
+### Fee types (`POST /fees`)
+
+- `TRADE`: Stock trading fees for the user's investment subscription tier (`percentage_fee`, `fixed_fee_usd`); empty `data` array if no row matches
+
+### Card status
+
+- `ACTIVE`: card unblocked
+- `SUSPENDED`: card blocked
+
 ## Additional Resources
 
-- For detailed endpoint documentation, see [api-reference.md](api-reference.md)
-- For complete code examples, see [examples.md](examples.md)
+- For detailed endpoint documentation, see [api-reference.md](../examples/api-reference.md)
+- For complete code examples, see [examples.md](../examples/examples.md)

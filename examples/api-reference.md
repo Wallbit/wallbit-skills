@@ -72,7 +72,7 @@ Lists the transaction history with pagination and filters.
 | limit       | integer | No       | Results per page: 10, 20, 50 (default: 10) |
 | status      | string  | No       | Filter by status (e.g. COMPLETED) |
 | type        | string  | No       | Filter by type (e.g. TRADE) |
-| currency    | string  | No       | Currency: USD, EUR, ARS, MXN, USDC, USDT, BOB, COP, PEN, DOP |
+| currency    | string  | No       | Currency: USD, EUR, ARS, MXN, USDC, USDT, BOB, COP, PEN, DOP, BRL, PHP, CLP, GTQ, PAB, CRC |
 | from_date   | date    | No       | Start date (format: Y-m-d) |
 | to_date     | date    | No       | End date (format: Y-m-d) |
 | from_amount | number  | No       | Minimum amount |
@@ -173,6 +173,67 @@ Executes a buy (BUY) or sell (SELL) operation on assets.
 **Specific errors**:
 - 400: Insufficient funds
 - 412: Incomplete investment KYC
+
+---
+
+## Fees Endpoints
+
+### POST /api/public/v1/fees
+
+Returns fee configuration for the requested fee type and the authenticated user's investment subscription tier. Requires `read` permission.
+
+**Request Body**:
+
+| Field | Type   | Required | Description |
+|-------|--------|----------|-------------|
+| type  | string | Yes      | Fee category; currently only `TRADE` |
+
+**Response 200** (fee found):
+```json
+{
+  "data": {
+    "fee_type": "TRADE",
+    "tier": "LEVEL1",
+    "percentage_fee": "0.5",
+    "fixed_fee_usd": "0.00"
+  }
+}
+```
+
+**Response 200** (no matching row): `{ "data": [] }`
+
+---
+
+## Rates Endpoints
+
+### GET /api/public/v1/rates
+
+Returns the stored exchange rate for a currency pair. Requires `read` permission.
+
+**Query Parameters**:
+
+| Parameter        | Type   | Required | Description |
+|------------------|--------|----------|-------------|
+| source_currency  | string | Yes      | Source currency code |
+| dest_currency    | string | Yes      | Destination currency code |
+
+**Response 200**:
+```json
+{
+  "data": {
+    "source_currency": "ARS",
+    "dest_currency": "USD",
+    "pair": "ARSUSD",
+    "rate": 1481.02,
+    "updated_at": "2026-02-25T01:50:04+00:00"
+  }
+}
+```
+
+**Notes**: If source and destination are identical, `rate` is `1.0` and `updated_at` is null.
+
+**Specific errors**:
+- 404: Exchange rate not found for this pair
 
 ---
 
@@ -404,6 +465,79 @@ Moves funds between the checking account (DEFAULT) and the investment account (I
 **Specific errors**:
 - 412: Blocked account, incomplete KYC, or account in migration
 - 422: Insufficient funds or validation error
+
+---
+
+## Cards Endpoints
+
+### GET /api/public/v1/cards
+
+Lists cards with status `ACTIVE` or `SUSPENDED`. Requires `read` permission.
+
+**Parameters**: None
+
+**Response 200**:
+```json
+{
+  "data": [
+    {
+      "uuid": "550e8400-e29b-41d4-a716-446655440000",
+      "status": "ACTIVE",
+      "card_type": "VIRTUAL",
+      "card_network": "visa",
+      "card_last4": "1234",
+      "expiration": "2029-01-01"
+    }
+  ]
+}
+```
+
+---
+
+### PATCH /api/public/v1/cards/{cardUuid}/status
+
+Blocks (`SUSPENDED`) or unblocks (`ACTIVE`) a card. Requires `trade` permission.
+
+**Path Parameters**:
+
+| Parameter | Type   | Required | Description |
+|-----------|--------|----------|-------------|
+| cardUuid  | uuid   | Yes      | Card UUID |
+
+**Request Body**:
+
+| Field  | Type   | Required | Description |
+|--------|--------|----------|-------------|
+| status | string | Yes      | `ACTIVE` or `SUSPENDED` |
+
+**Response 200**:
+```json
+{
+  "data": {
+    "uuid": "550e8400-e29b-41d4-a716-446655440000",
+    "status": "SUSPENDED"
+  }
+}
+```
+
+**Specific errors**:
+- 404: Card not found
+- 503: Payment provider unavailable
+
+---
+
+## API Key Endpoints
+
+### DELETE /api/public/v1/api-key
+
+Permanently revokes the API key sent in the `X-API-Key` header. Any valid key may revoke itself (no `read`/`trade` scope required).
+
+**Response 200**:
+```json
+{
+  "message": "API Key revoked successfully."
+}
+```
 
 ---
 
